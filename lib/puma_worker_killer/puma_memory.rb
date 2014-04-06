@@ -44,10 +44,12 @@ module PumaWorkerKiller
 
     # Will refresh @workers
     def get_total(workers = set_workers)
-      master_memory = GetProcessMem.new(Process.pid)
-      master_memory.mem_type = 'Rss'
+      rss_memory = GetProcessMem.new(Process.pid)
+      rss_memory.mem_type = 'Rss'
+      swap_memory = GetProcessMem.new(Process.pid)
+      swap_memory.mem_type = 'Swap'
       worker_memory = workers.map {|_, mem| mem }.inject(&:+) || 0
-      worker_memory + master_memory.mb
+      worker_memory + rss_memory.mb + swap_memory.mb
     end
     alias :get_total_memory :get_total
 
