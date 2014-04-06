@@ -44,9 +44,10 @@ module PumaWorkerKiller
 
     # Will refresh @workers
     def get_total(workers = set_workers)
-      master_memory = GetProcessMem.new(Process.pid).mb
+      master_memory = GetProcessMem.new(Process.pid)
+      master_memory.mem_type = 'Rss'
       worker_memory = workers.map {|_, mem| mem }.inject(&:+) || 0
-      worker_memory + master_memory
+      worker_memory + master_memory.mb
     end
     alias :get_total_memory :get_total
 
@@ -65,7 +66,9 @@ module PumaWorkerKiller
     def set_workers
       workers = {}
       @master.instance_variable_get("@workers").each do |worker|
-        workers[worker] = GetProcessMem.new(worker.pid).mb
+        mem = GetProcessMem.new(worker.pid)
+        mem.mem_type = 'Private_Dirty'
+        workers[worker] = mem.mb
       end
       if workers.any?
         @workers = Hash[ workers.sort_by {|_, mem| mem } ]
