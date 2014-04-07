@@ -68,9 +68,11 @@ module PumaWorkerKiller
     def set_workers
       workers = {}
       @master.instance_variable_get("@workers").each do |worker|
-        mem = GetProcessMem.new(worker.pid)
-        mem.mem_type = 'Private_Dirty'
-        workers[worker] = mem.mb
+        dirty = GetProcessMem.new(worker.pid)
+        dirty.mem_type = 'Private_Dirty'
+        swap = GetProcessMem.new(worker.pid)
+        swap.mem_type = 'Swap'
+        workers[worker] = dirty.mb + swap.mb
       end
       if workers.any?
         @workers = Hash[ workers.sort_by {|_, mem| mem } ]
