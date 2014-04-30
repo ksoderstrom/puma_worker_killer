@@ -44,10 +44,8 @@ module PumaWorkerKiller
 
     # Will refresh @workers
     def get_total(workers = set_workers)
-      rss_memory = GetProcessMem.new(Process.pid)
-      rss_memory.mem_type = 'Rss'
-      swap_memory = GetProcessMem.new(Process.pid)
-      swap_memory.mem_type = 'Swap'
+      rss_memory = GetProcessMem.new(Process.pid, 'Rss')
+      swap_memory = GetProcessMem.new(Process.pid, 'Swap')
       worker_memory = workers.map {|_, mem| mem }.inject(&:+) || 0
       worker_memory + rss_memory.mb + swap_memory.mb
     end
@@ -68,10 +66,8 @@ module PumaWorkerKiller
     def set_workers
       workers = {}
       @master.instance_variable_get("@workers").each do |worker|
-        dirty = GetProcessMem.new(worker.pid)
-        dirty.mem_type = 'Private_Dirty'
-        swap = GetProcessMem.new(worker.pid)
-        swap.mem_type = 'Swap'
+        dirty = GetProcessMem.new(worker.pid, 'Private_Dirty')
+        swap = GetProcessMem.new(worker.pid, 'Swap')
         workers[worker] = dirty.mb + swap.mb
       end
       if workers.any?
